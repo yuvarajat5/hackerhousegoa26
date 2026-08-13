@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hacker House Goa 2026 · Frame Builder</title>
+<meta name="description" content="Get your Hacker House Goa 2026 Builder Card or PFP Frame. #FrameInGoa">
+<meta property="og:title" content="Hacker House Goa 2026 · Frame Builder">
+<meta property="og:description" content="Brand your profile with a Hacker House Goa badge. #FrameInGoa">
+<meta property="og:image" content="assets/og-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  :root{
+    --green:#0A683B;
+    --green-dark:#0E452A;
+    --yellow:#F2C230;
+    --pink:#F51076;
+    --cream:#F5F0E6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--green);
+    color:var(--cream);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:1.5rem 1rem 3rem;
+  }
+  .app{
+    max-width:640px;
+    width:100%;
+  }
+  header.hero{ text-align:center; margin-bottom:1.6rem; }
+
+  .site-logo{
+    position:fixed;
+    top:1rem; left:1rem;
+    width:110px; height:110px;
+    z-index:50;
+    border-radius:50%;
+    box-shadow:0 4px 14px rgba(0,0,0,0.35);
+  }
+  @media (max-width:480px){
+    .site-logo{ width:84px; height:84px; top:0.7rem; left:0.7rem; }
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:2rem;
+    letter-spacing:0.5px;
+    color:var(--yellow);
+  }
+  .subhead{
+    font-size:0.9rem;
+    color:var(--cream);
+    opacity:0.75;
+    margin-top:0.25rem;
+  }
+
+  .panel{
+    background:var(--green-dark);
+    border:1px solid rgba(242,194,48,0.35);
+    border-radius:20px;
+    padding:1.1rem 1.1rem 1.3rem;
+    margin-bottom:1rem;
+  }
+
+  .format-selector{
+    display:flex; gap:0.5rem;
+    background:rgba(0,0,0,0.2);
+    border-radius:14px; padding:0.4rem;
+    margin-bottom:1rem;
+  }
+  .format-btn{
+    flex:1; padding:0.6rem 0; text-align:center; border-radius:10px;
+    font-family:'Oswald',sans-serif; font-weight:600; font-size:0.95rem;
+    letter-spacing:0.3px;
+    background:transparent; border:none; color:var(--cream);
+    cursor:pointer; transition:0.15s;
+  }
+  .format-btn.active{ background:var(--yellow); color:var(--green); }
+  .format-btn:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  .field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0.7rem; margin-bottom:0.2rem; }
+  @media (max-width:480px){ .field-grid{ grid-template-columns:1fr; } }
+  .field{ display:flex; flex-direction:column; gap:0.3rem; margin-bottom:0.7rem; }
+  .field label{
+    font-size:0.72rem; font-weight:600; text-transform:uppercase;
+    letter-spacing:0.5px; color:var(--cream); opacity:0.75;
+  }
+  .field .optional{ opacity:0.55; text-transform:none; font-weight:400; }
+  .field input{
+    background:rgba(0,0,0,0.25);
+    border:1px solid rgba(242,194,48,0.4);
+    border-radius:10px; padding:0.7rem 0.85rem;
+    color:var(--cream); font-size:0.95rem; font-family:'Inter',sans-serif;
+  }
+  .field input::placeholder{ color:rgba(245,240,230,0.4); }
+  .field input:focus{ outline:none; border-color:var(--pink); box-shadow:0 0 0 3px rgba(232,54,143,0.25); }
+
+  .upload-zone{
+    border:2px dashed rgba(242,194,48,0.6);
+    border-radius:16px; padding:1.6rem 1rem;
+    text-align:center; cursor:pointer; position:relative;
+    transition:0.15s;
+  }
+  .upload-zone.drag-over{ border-color:var(--pink); background:rgba(232,54,143,0.08); }
+  .upload-zone input[type="file"]{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+  .upload-zone .icon{ font-size:1.8rem; display:block; margin-bottom:0.3rem; }
+  .upload-zone .main-txt{ font-weight:600; font-size:0.95rem; }
+  .upload-zone .hint{ font-size:0.78rem; opacity:0.65; margin-top:0.2rem; }
+
+  .crop-section{ display:none; margin-top:1rem; }
+  .crop-section.active{ display:block; }
+  .crop-hint{ text-align:center; font-size:0.78rem; opacity:0.65; margin-bottom:0.6rem; }
+  .crop-stage{
+    position:relative; width:100%; max-width:320px; aspect-ratio:1/1;
+    margin:0 auto; overflow:hidden; border-radius:14px;
+    border:2px solid var(--yellow); cursor:grab; touch-action:none;
+    background:rgba(0,0,0,0.3);
+  }
+  .crop-stage:active{ cursor:grabbing; }
+  #liveCanvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .zoom-row{
+    display:flex; align-items:center; gap:0.7rem;
+    max-width:320px; margin:0.8rem auto 0;
+  }
+  .zoom-row label{ font-size:0.8rem; opacity:0.75; white-space:nowrap; }
+  .zoom-row input[type="range"]{ flex:1; accent-color:var(--pink); }
+  .zoom-row .zoom-val{ font-size:0.8rem; opacity:0.75; width:2.6rem; text-align:right; }
+
+  .actions{ display:flex; flex-wrap:wrap; gap:0.6rem; margin-top:1.2rem; }
+  .btn{
+    flex:1; min-width:110px;
+    font-family:'Oswald',sans-serif; font-weight:600; font-size:0.95rem; letter-spacing:0.3px;
+    padding:0.75rem 0.6rem; border-radius:30px; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; gap:0.4rem;
+    transition:0.12s;
+  }
+  .btn-primary{ background:var(--yellow); color:var(--green); border:none; }
+  .btn-primary:active:not(:disabled){ transform:scale(0.97); }
+  .btn-secondary{ background:transparent; color:var(--cream); border:1.5px solid rgba(245,240,230,0.5); }
+  .btn-secondary:active:not(:disabled){ transform:scale(0.97); }
+  .btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  .btn:focus-visible{ outline:3px solid var(--pink); outline-offset:2px; }
+
+  .status{ text-align:center; font-size:0.82rem; min-height:1.4rem; margin-top:0.7rem; opacity:0.85; }
+  .status.err{ color:#ffb3d1; }
+
+  .result-wrap{ text-align:center; }
+  #finalCanvas{
+    width:100%; max-width:420px; height:auto; border-radius:16px;
+    display:block; margin:0 auto;
+  }
+
+  footer.note{
+    text-align:center; font-size:0.75rem; opacity:0.55;
+    margin-top:1.6rem; padding-top:1rem; border-top:1px solid rgba(245,240,230,0.15);
+  }
+  footer.note strong{ color:var(--yellow); font-weight:600; opacity:1; }
+
+  .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+</style>
+</head>
+<body>
+<img class="site-logo" src="https://raw.githubusercontent.com/yuvarajat5/hackerhouse/main/ChatGPT%20Image%20Aug%209,%202026,%2012_04_25%20PM.png" alt="Hacker House Goa logo">
+<div class="app">
+
+  <header class="hero">
+    <h1>GET YOUR HACKER HOUSE BADGE</h1>
+    <p class="subhead">Hacker House Goa 2026 &middot; upload a photo, generate, share</p>
+  </header>
+
+  <div class="panel">
+    <div class="format-selector" role="radiogroup" aria-label="Choose a format">
+      <button type="button" class="format-btn active" data-format="card" role="radio" aria-checked="true">Builder Card</button>
+      <button type="button" class="format-btn" data-format="pfp" role="radio" aria-checked="false">PFP Frame</button>
+    </div>
+
+    <div id="cardFields">
+      <div class="field">
+        <label for="nameInput">Name</label>
+        <input type="text" id="nameInput" placeholder="e.g. Ananya Sharma">
+      </div>
+      <div class="field">
+        <label for="stackInput">Stack / Role</label>
+        <input type="text" id="stackInput" placeholder="e.g. Full-stack developer">
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label for="teamNameInput">Team Name <span class="optional">(optional)</span></label>
+          <input type="text" id="teamNameInput" placeholder="e.g. Builders Collective">
+        </div>
+        <div class="field">
+          <label for="teamNoInput">Team No <span class="optional">(optional)</span></label>
+          <input type="text" id="teamNoInput" placeholder="e.g. 42 or A12">
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept="image/*,.heic,.heif">
+      <span class="icon" aria-hidden="true">&#128247;</span>
+      <div class="main-txt">Tap or drag to upload your photo</div>
+      <div class="hint">Supports JPG, PNG, and iPhone HEIC photos</div>
+    </div>
+
+    <div class="crop-section" id="cropSection">
+      <p class="crop-hint">Drag to reposition &middot; use the slider to zoom</p>
+      <div class="crop-stage" id="cropStage">
+        <canvas id="liveCanvas" width="640" height="640"></canvas>
+      </div>
+      <div class="zoom-row">
+        <label for="zoomSlider">Zoom</label>
+        <input type="range" id="zoomSlider" min="100" max="220" value="100">
+        <span class="zoom-val" id="zoomVal">100%</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn btn-primary" id="generateBtn">Generate</button>
+      <button type="button" class="btn btn-secondary" id="downloadBtn" disabled>Download</button>
+      <button type="button" class="btn btn-secondary" id="shareBtn" disabled>Share to X</button>
+    </div>
+    <p class="status" id="statusEl">Upload a photo to get started</p>
+  </div>
+
+  <div class="panel result-wrap">
+    <canvas id="finalCanvas" width="1080" height="1080"></canvas>
+  </div>
+
+  <footer class="note">
+    <strong>#FrameInGoa</strong> &middot; Hacker House Goa 2026
+  </footer>
+</div>
+
+<script>
+(function(){
+  // ---------- CONFIG ----------
+  const IMGBB_API_KEY = 'YOUR_IMGBB_API_KEY_HERE'; // get a free key at api.imgbb.com
+
+  const COLORS = {
+    green:'#0A683B', greenDark:'#0E452A', yellow:'#F2C230',
+    pink:'#F51076', cream:'#F5F0E6', white:'#FBF9F4'
+  };
+
+  // (builder title generator removed per feedback — no longer used)
+
+  // ---------- DOM ----------
+  const finalCanvas = document.getElementById('finalCanvas');
+  const finalCtx = finalCanvas.getContext('2d');
+  const liveCanvas = document.getElementById('liveCanvas');
+  const liveCtx = liveCanvas.getContext('2d');
+
+  const fileInput = document.getElementById('fileInput');
+  const uploadZone = document.getElementById('uploadZone');
+  const cropSection = document.getElementById('cropSection');
+  const cropStage = document.getElementById('cropStage');
+  const zoomSlider = document.getElementById('zoomSlider');
+  const zoomVal = document.getElementById('zoomVal');
+
+  const cardFields = document.getElementById('cardFields');
+  const nameInput = document.getElementById('nameInput');
+  const stackInput = document.getElementById('stackInput');
+  const teamNameInput = document.getElementById('teamNameInput');
+  const teamNoInput = document.getElementById('teamNoInput');
+
+  const formatBtns = document.querySelectorAll('.format-btn');
+  const generateBtn = document.getElementById('generateBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const shareBtn = document.getElementById('shareBtn');
+  const statusEl = document.getElementById('statusEl');
+
+  // ---------- STATE ----------
+  let currentFormat = 'card';
+  let sourceImage = null;
+  let logoImage = null;
+  let generatedDataURL = null;
+
+  let zoom = 1, offsetX = 0, offsetY = 0;
+  let dragging = false, dragStartX = 0, dragStartY = 0, startOffX = 0, startOffY = 0;
+
+  // ---------- LOGO ----------
+  function loadLogo(){
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => { logoImage = img; resolve(); };
+      img.onerror = () => { console.error('Logo failed to load from GitHub URL'); logoImage = null; resolve(); };
+      img.src = 'https://raw.githubusercontent.com/yuvarajat5/hackerhouse/main/ChatGPT%20Image%20Aug%209,%202026,%2012_04_25%20PM.png';
+    });
+  }
+
+  // ---------- FILE / HEIC HANDLING ----------
+  function loadImageFile(file){
+    return new Promise((resolve, reject) => {
+      const isHeic = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+      const toImage = (blobOrFile) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error('Could not decode image.'));
+          img.src = e.target.result;
+        };
+        reader.onerror = () => reject(new Error('File read error.'));
+        reader.readAsDataURL(blobOrFile);
+      };
+      if (isHeic && window.heic2any){
+        heic2any({ blob:file, toType:'image/jpeg', quality:0.9 })
+          .then(toImage)
+          .catch((err) => reject(new Error('HEIC conversion failed: ' + err.message)));
+      } else {
+        toImage(file);
+      }
+    });
+  }
+
+  // ---------- CROP MATH (cover-fit + pan/zoom, clamped) ----------
+  function calcCrop(srcW, srcH, frameW, frameH, z, offX, offY){
+    const scale = Math.max(frameW / (srcW * z), frameH / (srcH * z));
+    const cropW = frameW / scale;
+    const cropH = frameH / scale;
+    const maxPanX = Math.max(0, srcW - cropW) / 2;
+    const maxPanY = Math.max(0, srcH - cropH) / 2;
+    const centerX = (srcW - cropW) / 2;
+    const centerY = (srcH - cropH) / 2;
+    let sx = centerX + offX * maxPanX;
+    let sy = centerY + offY * maxPanY;
+    sx = Math.max(0, Math.min(sx, srcW - cropW));
+    sy = Math.max(0, Math.min(sy, srcH - cropH));
+    return { sx, sy, sw: cropW, sh: cropH };
+  }
+
+  function archPath(ctx, x, y, w, h){
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x + w, y + h * 0.62);
+    const r = w / 2;
+    ctx.arc(x + r, y + h * 0.62, r, 0, Math.PI, true);
+    ctx.lineTo(x, y + h * 0.62);
+    ctx.closePath();
+  }
+
+  // ---------- LIVE CROP PREVIEW ----------
+  function renderLivePreview(){
+    if (!sourceImage) return;
+    const S = 640;
+    liveCtx.clearRect(0, 0, S, S);
+    const crop = calcCrop(sourceImage.width, sourceImage.height, S, S, zoom, offsetX, offsetY);
+
+    liveCtx.save();
+    if (currentFormat === 'card') archPath(liveCtx, 0, 0, S, S);
+    else { liveCtx.beginPath(); liveCtx.arc(S/2, S/2, S/2, 0, Math.PI*2); }
+    liveCtx.clip();
+    liveCtx.fillStyle = COLORS.greenDark;
+    liveCtx.fillRect(0,0,S,S);
+    liveCtx.drawImage(sourceImage, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, S, S);
+    liveCtx.restore();
+
+    liveCtx.lineWidth = 5;
+    liveCtx.strokeStyle = COLORS.yellow;
+    if (currentFormat === 'card') archPath(liveCtx, 0, 0, S, S);
+    else { liveCtx.beginPath(); liveCtx.arc(S/2, S/2, S/2, 0, Math.PI*2); }
+    liveCtx.stroke();
+  }
+
+  // ---------- WAVE PATH (flat vector wave, used as header's bottom edge) ----------
+  function waveHeaderPath(ctx, x, y, w, h, waveDepth){
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + w, y);
+    ctx.lineTo(x + w, y + h - waveDepth);
+    const seg = w / 4;
+    ctx.bezierCurveTo(
+      x + w - seg * 0.5, y + h + waveDepth * 0.6,
+      x + w - seg * 1.5, y + h - waveDepth * 1.4,
+      x + w - seg * 2, y + h - waveDepth * 0.3
+    );
+    ctx.bezierCurveTo(
+      x + w - seg * 2.5, y + h + waveDepth * 0.9,
+      x + w - seg * 3.5, y + h - waveDepth * 1.2,
+      x, y + h - waveDepth
+    );
+    ctx.closePath();
+  }
+
+  // ---------- CARTOON BOAT (simple flat vector, sits on the wave line) ----------
+  function drawCartoonBoat(ctx, cx, cy, scale){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+
+    // hull
+    ctx.fillStyle = COLORS.cream;
+    ctx.beginPath();
+    ctx.moveTo(-38, 0);
+    ctx.quadraticCurveTo(0, 22, 38, 0);
+    ctx.lineTo(30, -6);
+    ctx.lineTo(-30, -6);
+    ctx.closePath();
+    ctx.fill();
+
+    // mast
+    ctx.strokeStyle = COLORS.cream;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, -6);
+    ctx.lineTo(0, -46);
+    ctx.stroke();
+
+    // sail
+    ctx.fillStyle = COLORS.yellow;
+    ctx.beginPath();
+    ctx.moveTo(0, -44);
+    ctx.lineTo(0, -8);
+    ctx.lineTo(30, -10);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // ---------- FINAL RENDER: BUILDER CARD ----------
+  function drawBuilderCard(){
+    const w = 1080, h = 1080;
+    const ctx = finalCtx;
+    ctx.clearRect(0, 0, w, h);
+
+    // Outer card — cream body, single soft shadow, yellow border
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.28)';
+    ctx.shadowBlur = 28;
+    ctx.shadowOffsetY = 10;
+    ctx.fillStyle = COLORS.white;
+    ctx.beginPath();
+    ctx.roundRect(24, 24, w - 48, h - 48, 36);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = COLORS.yellow;
+    ctx.beginPath();
+    ctx.roundRect(24, 24, w - 48, h - 48, 36);
+    ctx.stroke();
+
+    // Header — green block with a wavy bottom edge (the "coastal transition")
+    const headerH = 230, hx = 24, hy = 24, hw = w - 48, waveDepth = 18;
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(hx, hy, hw, headerH, [36, 36, 0, 0]);
+    ctx.clip();
+    waveHeaderPath(ctx, hx, hy, hw, headerH, waveDepth);
+    ctx.fillStyle = COLORS.green;
+    ctx.fill();
+    ctx.restore();
+
+    // thin yellow line tracing the wave edge
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(hx, hy, hw, headerH + 10);
+    ctx.clip();
+    waveHeaderPath(ctx, hx, hy, hw, headerH, waveDepth);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = COLORS.yellow;
+    ctx.globalAlpha = 0.9;
+    ctx.stroke();
+    ctx.restore();
+
+    // cartoon boat riding the wave
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(hx, hy, hw, headerH + 20);
+    ctx.clip();
+    ctx.globalAlpha = 0.9;
+    drawCartoonBoat(ctx, hx + hw - 110, hy + headerH - waveDepth - 6, 0.85);
+    ctx.restore();
+
+    // #hhgoa26 tag, top-left corner — drawn after the header so it's actually visible
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = COLORS.cream;
+    ctx.globalAlpha = 0.55;
+    ctx.font = '500 20px "Inter", sans-serif';
+    ctx.fillText('#hhgoa26', hx + 26, hy + 34);
+    ctx.globalAlpha = 1;
+
+    // Logo centered top, "GOA 2026" close beneath it
+    const centerX = hx + hw / 2;
+    let cursorY = hy + 6;
+
+    if (logoImage){
+      const logoSize = 192;
+      ctx.drawImage(logoImage, centerX - logoSize/2, cursorY, logoSize, logoSize);
+      cursorY += logoSize;
+    } else {
+      cursorY += 12;
+    }
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = COLORS.pink;
+    ctx.font = '600 22px "Oswald", sans-serif';
+    ctx.fillText('GOA 2026', centerX, cursorY + 2);
+
+    // Photo — circular, left side, slightly bigger to use more of the card's height
+    const photoR = 225;
+    const photoCX = 90 + photoR, photoCY = hy + headerH + 36 + photoR;
+    const crop = calcCrop(sourceImage.width, sourceImage.height, photoR*2, photoR*2, zoom, offsetX, offsetY);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(photoCX, photoCY, photoR, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(sourceImage, crop.sx, crop.sy, crop.sw, crop.sh, photoCX - photoR, photoCY - photoR, photoR*2, photoR*2);
+    ctx.restore();
+
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = COLORS.yellow;
+    ctx.beginPath();
+    ctx.arc(photoCX, photoCY, photoR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Info column — right side, Name / Role
+    const infoX = photoCX + photoR + 34;
+    const infoRight = w - 70;
+    let iy = photoCY - photoR + 130;
+
+    const name = (nameInput.value || 'Your Name').trim().toUpperCase();
+    const role = (stackInput.value || 'Builder').trim().toUpperCase();
+    const teamName = teamNameInput.value.trim().toUpperCase();
+    const teamNo = teamNoInput.value.trim().toUpperCase();
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = COLORS.green;
+    ctx.font = '700 70px "Oswald", sans-serif';
+    const nameLines = wrapText(ctx, name, infoX, iy, infoRight - infoX, 72);
+    iy += 72 * nameLines + 24;
+
+    ctx.fillStyle = COLORS.green;
+    ctx.globalAlpha = 0.55;
+    ctx.font = '600 18px "Oswald", sans-serif';
+    ctx.fillText('ROLE', infoX, iy);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = COLORS.green;
+    ctx.font = '700 38px "Inter", sans-serif';
+    ctx.fillText(role, infoX, iy + 42);
+
+    // Thin divider — fills the gap between the photo/name block and the team stickers
+    const dividerY = photoCY + photoR + 34;
+    ctx.strokeStyle = COLORS.green;
+    ctx.globalAlpha = 0.2;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(70, dividerY);
+    ctx.lineTo(w - 70, dividerY);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Team No / Team Name — single horizontal row, both badges centered together, straight
+    function measureBadge(value){
+      ctx.font = '700 30px "Oswald", sans-serif';
+      const textW = ctx.measureText(value).width;
+      return Math.max(180, textW + 70);
+    }
+
+    function drawBadge(value, x, cy, boxW){
+      ctx.save();
+      ctx.translate(x, cy);
+      ctx.fillStyle = COLORS.pink;
+      ctx.beginPath();
+      ctx.roundRect(-boxW/2, -32, boxW, 64, 15);
+      ctx.fill();
+      ctx.fillStyle = COLORS.cream;
+      ctx.font = '700 30px "Oswald", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(value, 0, 3);
+      ctx.restore();
+    }
+
+    if (teamNo || teamName){
+      const teamRowY = dividerY + 68;
+      const gap = 22;
+      const v1 = teamNo ? `TEAM ${teamNo}` : null;
+      const v2 = teamName || null;
+
+      if (v1 && v2){
+        const w1 = measureBadge(v1), w2 = measureBadge(v2);
+        const totalW = w1 + gap + w2;
+        const startX = w/2 - totalW/2;
+        drawBadge(v1, startX + w1/2, teamRowY, w1);
+        drawBadge(v2, startX + w1 + gap + w2/2, teamRowY, w2);
+      } else {
+        const only = v1 || v2;
+        drawBadge(only, w/2, teamRowY, measureBadge(only));
+      }
+    }
+
+    // Subtle event identity footer — gives the remaining space a purpose
+    const footerY = h - 88;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = COLORS.green;
+    ctx.globalAlpha = 0.4;
+    ctx.font = '600 44px "Oswald", sans-serif';
+    ctx.fillText('PARTICIPATE', w/2, footerY);
+    ctx.globalAlpha = 1;
+
+    // #hackthefuture tag, bottom-right corner — same size/weight/position logic as #hhgoa26 (top-left),
+    // color swapped to green since this corner sits on the cream card body, not the green header
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = COLORS.green;
+    ctx.globalAlpha = 0.55;
+    ctx.font = '500 20px "Inter", sans-serif';
+    ctx.fillText('#hackthefuture', hx + hw - 26, h - hy - 34);
+    ctx.globalAlpha = 1;
+  }
+
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+    const words = text.split(' ');
+    let line = '', lines = [];
+    for (let i = 0; i < words.length; i++){
+      const test = line + words[i] + ' ';
+      if (ctx.measureText(test).width > maxWidth && line){
+        lines.push(line.trim()); line = words[i] + ' ';
+      } else line = test;
+    }
+    lines.push(line.trim());
+    const shown = lines.slice(0, 2);
+    shown.forEach((ln, i) => ctx.fillText(ln, x, y + i * lineHeight));
+    return shown.length;
+  }
+
+  // ---------- FINAL RENDER: PFP FRAME ----------
+  function drawPFPFrame(){
+    const w = 1080, h = 1080;
+    const ctx = finalCtx;
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.fillStyle = COLORS.green;
+    ctx.fillRect(0, 0, w, h);
+
+    // subtle radial vignette instead of a busy grid
+    const grad = ctx.createRadialGradient(w/2, h/2, h*0.2, w/2, h/2, h*0.65);
+    grad.addColorStop(0, 'rgba(255,255,255,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.18)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    const radius = 380, cx = w/2, cy = 430;
+    const crop = calcCrop(sourceImage.width, sourceImage.height, radius*2, radius*2, zoom, offsetX, offsetY);
+
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI*2); ctx.clip();
+    ctx.drawImage(sourceImage, crop.sx, crop.sy, crop.sw, crop.sh, cx-radius, cy-radius, radius*2, radius*2);
+    ctx.restore();
+
+    ctx.lineWidth = 12;
+    ctx.strokeStyle = COLORS.yellow;
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI*2); ctx.stroke();
+
+    if (logoImage){
+      const ls = 96;
+      ctx.drawImage(logoImage, cx - ls/2, cy + radius - ls*0.6, ls, ls);
+    }
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = COLORS.pink;
+    ctx.font = '600 20px "Oswald", sans-serif';
+    ctx.fillText('GOA 2026', w/2, cy - radius - 18);
+
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    drawCartoonBoat(ctx, w - 130, 100, 0.8);
+    ctx.restore();
+
+    const name = (nameInput.value || '').trim().toUpperCase();
+    const role = (stackInput.value || '').trim().toUpperCase();
+    const teamName = teamNameInput.value.trim().toUpperCase();
+    const teamNo = teamNoInput.value.trim().toUpperCase();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = COLORS.cream;
+    ctx.font = '700 50px "Oswald", sans-serif';
+    ctx.fillText(name || 'HACKER HOUSE GOA', w/2, cy + radius + 90);
+
+    if (role){
+      ctx.fillStyle = COLORS.pink;
+      ctx.font = '500 30px "Inter", sans-serif';
+      ctx.fillText(role, w/2, cy + radius + 138);
+    }
+
+    if (teamName || teamNo){
+      const label = teamNo && teamName ? `TEAM ${teamNo} · ${teamName}` : (teamNo ? `TEAM ${teamNo}` : teamName);
+      ctx.fillStyle = COLORS.cream;
+      ctx.globalAlpha = 0.7;
+      ctx.font = '400 24px "Inter", sans-serif';
+      ctx.fillText(label, w/2, cy + radius + 180);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function render(){
+    if (!sourceImage) return false;
+    if (currentFormat === 'card') drawBuilderCard();
+    else drawPFPFrame();
+    return true;
+  }
+
+  // ---------- roundRect polyfill ----------
+  if (!CanvasRenderingContext2D.prototype.roundRect){
+    CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+      if (typeof r === 'number') r = [r,r,r,r];
+      this.moveTo(x + r[0], y);
+      this.lineTo(x + w - r[1], y);
+      this.arcTo(x + w, y, x + w, y + r[1], r[1]);
+      this.lineTo(x + w, y + h - r[2]);
+      this.arcTo(x + w, y + h, x + w - r[2], y + h, r[2]);
+      this.lineTo(x + r[3], y + h);
+      this.arcTo(x, y + h, x, y + h - r[3], r[3]);
+      this.lineTo(x, y + r[0]);
+      this.arcTo(x, y, x + r[0], y, r[0]);
+      return this;
+    };
+  }
+
+  // ---------- EVENTS: upload ----------
+  async function handleFile(file){
+    if (!file) return;
+    try{
+      statusEl.classList.remove('err');
+      statusEl.textContent = 'Loading photo…';
+      sourceImage = await loadImageFile(file);
+      offsetX = 0; offsetY = 0; zoom = 1;
+      zoomSlider.value = 100; zoomVal.textContent = '100%';
+      cropSection.classList.add('active');
+      renderLivePreview();
+      statusEl.textContent = 'Looks good — hit Generate';
+    } catch(err){
+      statusEl.classList.add('err');
+      statusEl.textContent = err.message || 'Could not load that photo';
+      sourceImage = null;
+      cropSection.classList.remove('active');
+    }
+  }
+
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+  uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+
+  // ---------- EVENTS: format toggle ----------
+  formatBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      formatBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-checked','false'); });
+      btn.classList.add('active'); btn.setAttribute('aria-checked','true');
+      currentFormat = btn.dataset.format;
+      cardFields.style.display = currentFormat === 'card' ? 'block' : 'block'; // both formats show fields now
+      if (sourceImage) renderLivePreview();
+      invalidateResult();
+    });
+  });
+
+  // ---------- EVENTS: zoom + drag/pan ----------
+  zoomSlider.addEventListener('input', () => {
+    zoom = parseInt(zoomSlider.value, 10) / 100;
+    zoomVal.textContent = zoomSlider.value + '%';
+    renderLivePreview();
+    invalidateResult();
+  });
+
+  function startDrag(x, y){ dragging = true; dragStartX = x; dragStartY = y; startOffX = offsetX; startOffY = offsetY; }
+  function moveDrag(x, y){
+    if (!dragging) return;
+    offsetX = Math.max(-1, Math.min(1, startOffX + (x - dragStartX) / 120));
+    offsetY = Math.max(-1, Math.min(1, startOffY + (y - dragStartY) / 120));
+    renderLivePreview();
+  }
+  function endDrag(){ if (dragging){ dragging = false; invalidateResult(); } }
+
+  cropStage.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
+  window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+  window.addEventListener('mouseup', endDrag);
+
+  cropStage.addEventListener('touchstart', (e) => { const t = e.touches[0]; startDrag(t.clientX, t.clientY); }, {passive:true});
+  cropStage.addEventListener('touchmove', (e) => { e.preventDefault(); const t = e.touches[0]; moveDrag(t.clientX, t.clientY); }, {passive:false});
+  cropStage.addEventListener('touchend', endDrag);
+
+  // ---------- generate / invalidate ----------
+  function invalidateResult(){
+    generatedDataURL = null;
+    downloadBtn.disabled = true;
+    shareBtn.disabled = true;
+  }
+  [nameInput, stackInput, teamNameInput, teamNoInput].forEach(inp => inp.addEventListener('input', invalidateResult));
+
+  generateBtn.addEventListener('click', () => {
+    if (!sourceImage){
+      statusEl.classList.add('err');
+      statusEl.textContent = 'Upload a photo first';
+      return;
+    }
+    const ok = render();
+    if (ok){
+      generatedDataURL = finalCanvas.toDataURL('image/png');
+      downloadBtn.disabled = false;
+      shareBtn.disabled = false;
+      statusEl.classList.remove('err');
+      statusEl.textContent = 'Generated — download or share!';
+    }
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    if (!generatedDataURL) return;
+    try{
+      const { jsPDF } = window.jspdf;
+      const w = finalCanvas.width, h = finalCanvas.height;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [w, h] });
+      pdf.addImage(generatedDataURL, 'PNG', 0, 0, w, h, undefined, 'NONE');
+
+      const rawName = (nameInput.value || 'name').trim().replace(/\s+/g, '');
+      const rawTeamNo = (teamNoInput.value || '').trim().replace(/\s+/g, '');
+      const fileName = `${rawName}${rawTeamNo}.pdf`;
+
+      pdf.save(fileName);
+    } catch(err){
+      console.error('PDF export failed', err);
+      statusEl.classList.add('err');
+      statusEl.textContent = 'PDF export failed — try again.';
+    }
+  });
+
+  // ---------- share ----------
+  async function handleShare(){
+    if (!generatedDataURL) return;
+    const label = currentFormat === 'card' ? 'Builder Card' : 'PFP Frame';
+    const caption = `Just built my ${label} for Hacker House Goa 2026! #FrameInGoa`;
+
+    const blob = await (await fetch(generatedDataURL)).blob();
+    const file = new File([blob], 'frameingoa.png', { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      try{
+        await navigator.share({ files: [file], text: caption });
+        return;
+      } catch(err){
+        if (err.name === 'AbortError') return;
+        console.warn('Web Share failed, falling back', err);
+      }
+    }
+
+    statusEl.classList.remove('err');
+    statusEl.textContent = 'Uploading image…';
+    try{
+      const base64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.readAsDataURL(blob);
+      });
+      const formData = new FormData();
+      formData.append('image', base64);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method:'POST', body: formData });
+      if (!res.ok) throw new Error('Upload failed (' + res.status + ')');
+      const data = await res.json();
+      const viewerUrl = data.data.url_viewer;
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(caption + ' ' + viewerUrl)}`, '_blank');
+      statusEl.textContent = 'Shared! Opened X in a new tab.';
+    } catch(err){
+      statusEl.classList.add('err');
+      statusEl.textContent = 'Upload failed — download the image and attach it manually.';
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(caption)}`, '_blank');
+    }
+  }
+  shareBtn.addEventListener('click', handleShare);
+
+  // ---------- init ----------
+  loadLogo();
+})();
+</script>
+</body>
+</html>
